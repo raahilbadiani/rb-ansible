@@ -1,0 +1,54 @@
+---
+- hosts: cloud
+  become: yes
+  gather_facts: true
+  vars: 
+    packages: [git,tmux,htop,vim,unzip,tar,fontconfig]
+    files_to_source: [.myip.sh,.prompt.sh]
+  tasks:
+    - name: Check family of OS # shoud belong to [debian, Archlinux, Ubuntu, manjaro, mac]
+      debug: msg="os -> {{ ansible_distribution }}"
+
+    - name: Install Packages 
+      package:
+        name: "{{item}}"
+        state: present
+      with_items: "{{packages}}"
+
+  # - name: Send the font installer script
+  #   copy:
+  #     src: font_installer.sh
+  #     dest: "/home/{{ansible_user}}/font_installer.sh"
+  #     mode: '755'
+  #     owner: "{{ansible_user}}"
+
+    - name: Send vimrc
+      copy:
+        src: files/.vimrc
+        dest: "/home/{{ansible_user}}/.vimrc"
+        owner: "{{ansible_user}}"
+    
+    - name: Check if .prompt.sh present or not
+      stat:
+        path: "/home/{{ansible_user}}/.prompt.sh"
+      register: prompt_exists
+
+    - name: Send prompt.sh
+      copy:
+        src: files/.prompt.sh
+        dest: "/home/{{ansible_user}}/.prompt.sh"
+        owner: "{{ansible_user}}"
+        mode: '755'
+    
+    - name: Create myip file
+      copy:
+        dest: "/home/{{ansible_user}}/.myip.sh"
+        content: "export myip={{ansible_host}}"
+      when: not prompt_exists.stat.exists
+
+    - name: Append bashrc config to source myip and prompt
+      lineinfile:
+        path: "/home/{{ansible_user}}/.bashrc"
+        line: "source /home/{{ansible_user}}/{{item}}"
+        state: present
+      with_items: "{{files_to_source}}"

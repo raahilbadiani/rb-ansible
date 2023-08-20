@@ -1,0 +1,14 @@
+---
+dellvostro:
+    hosts:
+        physical:
+            ansible_host: localhost
+            ansible_connection: local
+            ansible_user: raahil
+
+aws:
+    hosts:
+        cloud:
+            ansible_host: 65.2.180.161 
+            ansible_user: ubuntu
+            ansible_private_key_file: ~/aws/awskeypairs/mum-aryabhat-my.pem
